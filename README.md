@@ -351,11 +351,11 @@ Todos son correctos. Lo importante no es el número exacto sino que sea **varios
 **P1.** Ejecutá `wc -l programa.i` y escribí el número de líneas que obtenés.
 
 <!-- Completá la línea siguiente con el número exacto (solo dígitos, sin espacios): -->
-LINEAS_I=
+LINEAS_I=821
 
 ¿Por qué ese número es tan mayor que las 94 líneas de `programa.c`?
 
-> **R:**
+> **R:** Porque en la etapa de preprocesamiento se expanden todas las directivas del #include, lo que hace que todo lo que esta adentro de los archivos se copie en programa.i
 
 ---
 
@@ -394,11 +394,11 @@ grep "Archivo fuente principal" programa.i   # no debe encontrar nada
 ¿El comando encuentra algo o no devuelve nada?
 
 <!-- Completá con SI (si encontró algo) o NO (si no encontró nada): -->
-COMENTARIOS_EN_I=
+COMENTARIOS_EN_I= NO
 
 ¿Por qué ocurre eso?
 
-> **R:**
+> **R:** Porque el preprocesador borra los comentarios del codigo antes de generar el archivo
 
 ---
 
@@ -427,24 +427,27 @@ Nótese que `CUADRADO(5)` se expande a `((5) * (5))`, con los paréntesis extra 
 
 **P3.** Ejecutá `grep -n "CUADRADO" programa.i` y copiá la salida completa.
 
-> **R:**
+> **R:** 158:extern int __attribute__((__cdecl__)) __attribute__((__nothrow__)) __attribute__((__format__(__mingw_printf__,1,0))) __mingw_vprintf(const char*, __builtin_va_list);
+175: int __attribute__((__cdecl__)) __attribute__((__nothrow__)) __attribute__((__format__(__ms_printf__,1,0))) __msvcrt_vprintf(const char *, __builtin_va_list);
+781:    printf("=== Laboratorio de Compilacion en C (v%s) ===\n\n", "1.0");
+790:    printf("CUADRADO(%d)      = %d\n", 5, ((5) * (5)));
 
 ¿El nombre `CUADRADO` aparece tal cual en `programa.i`, o fue reemplazado
 por otra cosa? Respondé SI o NO:
 
 <!-- Completá con SI o NO: -->
-CUADRADO_EN_I=
+CUADRADO_EN_I=NO
 
 ---
 
 **P4.** Ejecutá `grep -n '"1\.0"' programa.i` y copiá la línea encontrada.
 
-> **R:**
+> **R:** 781:    printf("=== Laboratorio de Compilacion en C (v%s) ===\n\n", "1.0");
 
 ¿Cuál era el nombre de la macro en `programa.c` que fue reemplazada por `"1.0"`?
 
 <!-- Completá con el nombre exacto de la macro (en mayúsculas, como está en el fuente): -->
-NOMBRE_MACRO_VERSION=
+NOMBRE_MACRO_VERSION=VERSION
 
 ---
 
@@ -480,13 +483,16 @@ gcc -E programa.c | grep "Iniciando"
 gcc -E -DDEBUG programa.c | grep "Iniciando"
 ```
 
-> **R:**
+> **R:** gcc -E programa.c | grep "Iniciando" (no tiene salida)
+         gcc -E -DDEBUG programa.c | grep "Iniciando"
+    printf("[DEBUG] %s\n", ("Iniciando main"));
+
 
 ¿Agregar `-DDEBUG` hace que aparezca código nuevo en el `.i` que antes no estaba?
 Respondé SI o NO:
 
 <!-- Completá con SI o NO: -->
-DEBUG_ACTIVA_CODIGO=
+DEBUG_ACTIVA_CODIGO=SI
 
 ---
 
@@ -509,7 +515,7 @@ grep -n "stdio.h" programa.i | head -5
 
 ¿Qué información comunican esas líneas `# N "archivo"`? ¿De qué archivo proviene el bloque que contiene la declaración de `printf`?
 
-> **R:**
+> **R:** Lo que comunican es a que archivo original proviene el codigo y que lineas son. El archivo del que provienen en este caso es c:\\mingw\\include\\stdio.h
 
 ---
 
@@ -665,26 +671,28 @@ Aparecen como instrucciones de llamada (por ejemplo `bl _area_circulo`), pero **
 
 **P7.** Ejecutá `grep "area_circulo" programa.s` y copiá la salida.
 
-> **R:**
+> **R:** grep: programa.s: No such file or directory
 
 ¿`area_circulo` aparece como una función *definida* en `programa.s`
 (con su propio bloque de instrucciones) o solo como una *llamada* (instrucción sin cuerpo)?
-Respondé DEFINIDA o LLAMADA:
-
 <!-- Completá con DEFINIDA o LLAMADA: -->
-AREA_EN_S=
+AREA_EN_S=LLAMADA
 
 ---
 
 **P8.** Encontrá en `programa.s` la etiqueta `sumar:` o `_sumar:` y copiá
 las primeras 4 líneas de instrucciones que le siguen.
 
-> **R:**
+> **R:**  .cfi_startproc
+        pushl   %ebp
+        .cfi_def_cfa_offset 8
+        .cfi_offset 5, -8
+
 
 Explicá en términos generales qué hacen esas instrucciones
 (usá los comentarios del laboratorio como guía):
 
-> **R:**
+> **R:** corresponden al inicio de una funcion
 
 ---
 
@@ -697,13 +705,18 @@ grep "llamadas" programa.s
 
 **P9.** Ejecutá `grep "llamadas" programa.s` y copiá la salida.
 
-> **R:**
+> **R:**  .globl  _llamadas
+_llamadas:
+        movl    _llamadas, %eax
+        movl    %eax, _llamadas
+        movl    _llamadas, %eax
+
 
 ¿Aparece la variable `llamadas` en el ensamblador?
 Respondé SI o NO:
 
 <!-- Completá con SI o NO: -->
-LLAMADAS_EN_S=
+LLAMADAS_EN_S=SI
 
 ---
 
@@ -807,13 +820,28 @@ Salida esperada (simplificada):
 
 **P10.** Ejecutá `nm programa.o` y copiá la salida completa.
 
-> **R:**
+> **R:**00000000 b .bss
+00000000 d .data
+00000000 r .eh_frame
+00000000 r .rdata
+00000000 r .rdata$zzz
+00000000 t .text
+         U ___main
+         U _area_circulo
+         U _factorial
+00000132 T _imprimir_separador
+00000000 B _llamadas
+0000001a T _main
+         U _printf
+         U _puts
+00000000 T _sumar
+
 
 ¿Con qué letra aparece `area_circulo` en esa tabla?
 Escribí solo la letra (una mayúscula):
 
 <!-- Completá con la letra exacta que muestra nm (U, T, D, etc.): -->
-TIPO_AREA_EN_O=
+TIPO_AREA_EN_O=U
 
 ---
 
@@ -833,13 +861,13 @@ nm matematica.o
 **P11.** ¿Por qué `area_circulo` tiene ese tipo en `programa.o`
 pero tipo `T` en `matematica.o`?
 
-> **R:**
+> **R:** porque en programa.o no esta definida solo declarada e implementada, pero en cambio en matematica.o si esta definida entonces aparece como funcion (T)
 
 ¿Qué etapa del proceso de compilación resuelve esa diferencia?
 Respondé con una palabra: PREPROCESAMIENTO, COMPILACION, ENSAMBLADO o ENLAZADO:
 
 <!-- Completá con una de las cuatro opciones: -->
-ETAPA_QUE_RESUELVE=
+ETAPA_QUE_RESUELVE=ENLAZADO
 
 ---
 
@@ -858,13 +886,14 @@ Un `.o` no es ejecutable por dos razones:
 
 **P12.** Intentá ejecutar `./programa.o` directamente. ¿Qué mensaje aparece?
 
-> **R:**
+> **R:** bash: ./programa.o: cannot execute binary file: Exec format error
+
 
 ¿Se puede ejecutar un archivo `.o` directamente?
 Respondé SI o NO:
 
 <!-- Completá con SI o NO: -->
-EJECUTABLE_O=
+EJECUTABLE_O=NO
 
 ---
 
@@ -953,13 +982,14 @@ nm programa | grep area_circulo
 **P13.** Enlazá con `gcc programa.o matematica.o -o programa`.
 Ejecutá `nm programa | grep "area_circulo"` y copiá la salida.
 
-> **R:**
+> **R:** 004015a8 T _area_circulo
+
 
 ¿Con qué letra aparece ahora `area_circulo` en el ejecutable final?
 Escribí solo la letra:
 
 <!-- Completá con la letra exacta que muestra nm: -->
-TIPO_AREA_ENLAZADO=
+TIPO_AREA_ENLAZADO=T
 
 ---
 
@@ -975,17 +1005,20 @@ Quedan algunos `U` incluso en el ejecutable final. ¿Por qué? Son funciones de 
 
 **P14.** Ejecutá `nm programa | grep "^ *U"` y copiá la salida.
 
-> **R:**
+> **R:**  U ___deregister_frame_info
+         U ___register_frame_info
+         U __Jv_RegisterClasses
+
 
 ¿Quedan símbolos de tipo `U` en el ejecutable final?
-Respondé SI o NO:
+Respondé SI o NO: 
 
 <!-- Completá con SI o NO: -->
-SIMBOLOS_U_FINAL=
+SIMBOLOS_U_FINAL=SI
 
 ¿Por qué quedan? ¿Quién los resuelve y cuándo?
 
-> **R:**
+> **R:** quedan porque son funciones de la biblioteca dinamica, estas funciones se encargan del tiempo de ejecucion, entonces el enlazador las deja a su nombre y cuando el programa se ejecute el cargador dinamico se encarga de resolverlas
 
 ---
 
@@ -999,12 +1032,28 @@ SIMBOLOS_U_FINAL=
 
 **P15.** Ejecutá `./programa` y copiá la salida completa.
 
-> **R:**
+> **R:** === Laboratorio de Compilacion en C (v1.0) ===
+
+sumar(3, 4)       = 7
+CUADRADO(5)      = 25
+MAX(7, 12)        = 12
+----------------------------------------
+area_circulo(5.0) = 78.5398
+Factoriales:
+  0! = 1
+  1! = 1
+  2! = 2
+  3! = 6
+  4! = 24
+  5! = 120
+----------------------------------------
+Llamadas a sumar(): 1
+
 
 ¿Qué valor da `factorial(5)`? Escribí solo el número:
 
 <!-- Completá con el número exacto: -->
-FACTORIAL_5=
+FACTORIAL_5=120
 
 ---
 
@@ -1016,25 +1065,29 @@ FACTORIAL_5=
 como `CUADRADO(x)` y una **función real** como `sumar(a, b)`.
 ¿En qué etapa "desaparece" cada una? ¿Cuál tiene verificación de tipos?
 
-> **R:**
+> **R:** Una macro funcion no vendria a ser como una funcion sino un reemplazo de texto, cuando aparece el texto indicado se cambia por una expresion ya definida, en cambio suma si es una funcion a la que hay q declarar llamar y pasarle parametros. La macro funcion desaparece en la etapa de preprocesamiento mientras que la real en el enlazado. La que tiene verificacion de pasos es la real
 
 ---
 
 **P17.** ¿Qué diferencia hay entre un símbolo de tipo `T` y uno de tipo `D`
 en la salida de `nm`? ¿En qué sección del archivo objeto vive cada uno?
 
-> **R:**
+> **R:** Los tipo T son funciones en la seccion text, osea codigo ejecutable, mientras que D esta en la seccion data y son variables globales con valor inicial.
 
 ---
 
 **P18.** (Bonus) Ejecutá `otool -L programa` (macOS) o `ldd programa` (Linux)
 y copiá la salida.
 
-> **R:**
+> **R:**  ntdll.dll => /c/WINDOWS/SYSTEM32/ntdll.dll (0x7ffce8dd0000)
+        ntdll.dll => /c/Windows/SysWOW64/ntdll.dll (0x76e60000)
+        wow64.dll => /c/WINDOWS/System32/wow64.dll (0x7ffce7350000)
+        wow64win.dll => /c/WINDOWS/System32/wow64win.dll (0x7ffce7690000)
+
 
 ¿Por qué `libc` no hubo que especificarla explícitamente al enlazar con `gcc`?
 
-> **R:**
+> **R:** porque gcc lo incluye automaticamente
 
 ---
 
@@ -1227,17 +1280,20 @@ int n = 3;
 printf("%d\n", CUADRADO(n++));
 ```
 
-a. ¿Cuántas veces se evalúa `n++`? ¿Por qué?
-b. ¿Cuál sería el resultado? ¿Es el esperado?
-c. ¿Cómo se resolvería este problema usando una función real en lugar de una macro?
+a. ¿Cuántas veces se evalúa `n++`? ¿Por qué? 2 porque se intercambia por las dos variables de CUADRADO
+b. ¿Cuál sería el resultado? ¿Es el esperado? el resultado seria 12, y no seria el esperado
+c. ¿Cómo se resolvería este problema usando una función real en lugar de una macro? 
+int cuadrado(int x) {
+    return x * x;
+}
 
 ### E2 — Provocar y leer errores del compilador
 
-a. **Error léxico:** en `programa.c`, escribí una cadena sin cerrar: `printf("hola`. Intentá compilar con `gcc -S programa.c`. ¿En qué etapa falla y qué dice el mensaje de error?
+a. **Error léxico:** en `programa.c`, escribí una cadena sin cerrar: `printf("hola`. Intentá compilar con `gcc -S programa.c`. ¿En qué etapa falla y qué dice el mensaje de error? Falla en la etapa de compilacion. el mensaje de error es error: missing terminating " character
 
-b. **Error sintáctico:** quitá un `;` al final de una declaración de variable. ¿Qué reporta el compilador? ¿Menciona la línea correcta?
+b. **Error sintáctico:** quitá un `;` al final de una declaración de variable. ¿Qué reporta el compilador? ¿Menciona la línea correcta? error: expected ';' before ...
 
-c. **Error semántico:** cambiá la llamada `sumar(3, 4)` por `sumar(3, 4, 5)`. ¿En qué etapa falla? ¿Por qué es semántico y no sintáctico?
+c. **Error semántico:** cambiá la llamada `sumar(3, 4)` por `sumar(3, 4, 5)`. ¿En qué etapa falla? ¿Por qué es semántico y no sintáctico? Falla en la etapa de compilacion. es semantico porque la sintaxis no falla
 
 d. **Error de enlazado:** comentá toda la implementación de `factorial` en `matematica.c` y recompilá solo el objeto (`gcc -c matematica.c -o matematica.o`). ¿Falla? Ahora intentá enlazar. ¿Cuándo falla y cuál es el mensaje exacto?
 
